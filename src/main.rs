@@ -13,6 +13,7 @@ struct State {
 }
 
 impl State {
+    // Initialize a random begin state.
     fn random() -> Self {
         let mut buffer_1: Vec<bool> = vec![false; WIDTH * HEIGHT];
         let buffer_2: Vec<bool> = vec![false; WIDTH * HEIGHT];
@@ -29,6 +30,9 @@ impl State {
         }
     }
 
+    // Each step assign one buffer to be the target buffer for drawing
+    // the new state to. The previous step's target buffer will then be
+    // used to read the current state from.
     fn step(&mut self) -> (&Vec<bool>, &mut Vec<bool>) {
         let (state, new_state) = if self.first_buffer {
             (&self.buffer_1, &mut self.buffer_2)
@@ -43,21 +47,22 @@ impl State {
 }
 
 fn main() {
-    let mut buffer: Vec<u32> = vec![0x999999; WIDTH * HEIGHT];
-
-    let mut state = State::random();
-
+    // Set up the window for drawing.
     let mut window = Window::new(
-        "Test", WIDTH, HEIGHT,
+        "Conway's Game of Life",
+        WIDTH, HEIGHT,
         WindowOptions {
-            scale: Scale::X4,
+            scale: Scale::X4,  // Scale the screen up to make things more visible.
             ..WindowOptions::default()
         }
     ).unwrap();
 
-    window.limit_update_rate(
-        Some(std::time::Duration::from_micros(2 * 16600))
-    );
+    // Limit framerate to 60 fps.
+    window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
+
+    // Initialize the state and drawing buffer.
+    let mut state = State::random();
+    let mut buffer: Vec<u32> = vec![0x999999; WIDTH * HEIGHT];
 
     while window.is_open() && !window.is_key_down(Key::Q) {
         // Switch the state buffers.
@@ -67,6 +72,7 @@ fn main() {
 
         for _ in 1..(HEIGHT - 1) {
             for _ in 1..(WIDTH - 1) {
+                // Collect the states in a Moore neighbourhood.
                 let c = state[idx];
                 let neighbourhood = vec![
                     state[idx - WIDTH - 1] as u8,
@@ -78,8 +84,9 @@ fn main() {
                     state[idx + WIDTH] as u8,
                     state[idx + WIDTH + 1] as u8,
                 ];
-                let n = neighbourhood.iter().sum();
+                let n: u8 = neighbourhood.iter().sum();
 
+                // Determine this cell's new state.
                 if !c {
                     if n == 3 { new_state[idx] = true; }
                     else { new_state[idx] = false; }
@@ -89,14 +96,8 @@ fn main() {
                     new_state[idx] = true;
                 }
 
+                // Determine this cell's color.
                 if new_state[idx] {
-                    buffer[idx] = match n {
-                        0 => 0x0000ff,
-                        1 => 0x00ff00,
-                        2 => 0xff0000,
-                        3 => 0xff00ff,
-                        _ => 0xffffff,
-                    };
                     buffer[idx] = 0xffffff;
                 } else {
                     buffer[idx] = 0x000000;
