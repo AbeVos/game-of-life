@@ -1,5 +1,5 @@
 [package]
-name = "Game of Life"
+name = "game-of-life"
 version = "0.1.0"
 authors = ["Abe <abe_vos@msn.com>"]
 edition = "2018"
